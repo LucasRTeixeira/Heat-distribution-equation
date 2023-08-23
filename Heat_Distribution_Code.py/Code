@@ -1,0 +1,90 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Módulo da operação do calor
+def calor(dx, dt):
+    # Parâmetros
+    Ti = 100.0  # Temperatura inicial
+    Ts = 300.0  # Temperatura da superfície
+    a = 0.1  # Difusividade
+    tf = 0.1  # Tempo final
+
+    # Cálculo dos números espaciais e temporais
+    N = int(1 / dx) + 1
+    M = int(tf / dt) + 1
+
+    # Condição de erro do cálculo
+    if ((a * dt) / dx ** 2) > 0.5:
+        print("ERRO, não cumpre: α∆t/(∆x)^2 > 1/2")
+        return
+
+    # Fazer uma grid de temperatura
+    v = np.zeros((N, M))
+    v[:, 0] = Ti
+
+    # Substituir os valores no Ts
+    v[0, :] = Ts
+    v[-1, :] = Ts
+
+    # Resolução da equação do calor
+    for i in range(M - 1):
+        for j in range(1, N - 1):
+            v[j, i + 1] = v[j, i] + alpha * dt / dx ** 2 * (v[j + 1, i] - 2 * v[j, i] + v[j - 1, i])
+
+    # Distribuição de temperatura no tempo final
+    T_final = v[:, -1]
+
+    # Printar as distribuições de temperatura, suas posições e temperaturas em si
+    print("Distribuição de temperatura t = {}:".format(tf))
+    for i, temp in enumerate(T_final):
+        print("Posição = {:.2f} ft: Temperatura = {:.2f} °F".format(i * dx, temp))
+
+    # Encaixa isso em um gráfico
+    x = np.linspace(0, 1, N)
+    plt.plot(x, T_final)
+    plt.xlabel("Posição (ft)")
+    plt.ylabel("Temperatura (°F)")
+    plt.title("Distribuição de temperatura em t = {}".format(tf))
+    plt.grid(True)
+    plt.show()
+
+# Organiza e executa as funções para os valores dados no enunciado
+print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+print("Letra a)")
+calor(0.05, 0.01)
+print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+print("Letra b)")
+calor(0.05, 0.05)
+print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+
+# Módulo da fórmula que descobre a solução exata
+def solucao(x, t, Ti, Ts, C, a, m_max):
+    T_ex = Ts + 2 * (Ti - Ts) * np.sum((1 - (-1) ** np.arange(1, m_max+1)) / (np.pi * np.arange(1, m_max+1)) * np.exp(-(np.pi * np.arange(1, m_max+1) / C) ** 2 * a * t) * np.sin(np.pi * np.arange(1, m_max+1) * x / C))
+    return T_ex
+
+# Parâmetros
+Ti = 100.0  # Temperatura inicial
+Ts = 300.0  # Temperatura da superfície
+alpha = 0.1  # Difusividade
+C = 1.0  # Comprimento da parede
+t = 0.1  # tempo dado
+pos_x = np.linspace(0, C, 21)  # Posições da parede
+
+# Cálculo de cada posição exata aplicando na função
+EXS = []
+for x in pos_x:
+    T_ex = solucao(x, t, Ti, Ts, C, alpha, 100)
+    EXS.append(T_ex)
+
+# Printar as posições e suas respectivas temperaturas
+print("Exact Temperature Distribution at t = 0.1 hour:")
+for x, temp in zip(pos_x, EXS):
+    print("Posição = {:.2f} ft: Temperatura = {:.2f} °F".format(x, temp))
+
+# Colocar tudo em um gráfico
+plt.plot(pos_x, EXS)
+plt.xlabel('Posição (ft)')
+plt.ylabel('Temperatura (°F)')
+plt.title('Distribuição exata de temperatura em t = 0.1')
+plt.grid(True)
+plt.show()
